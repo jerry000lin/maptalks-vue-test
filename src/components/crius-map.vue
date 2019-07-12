@@ -6,6 +6,7 @@
 
 <script>
 import * as maptalks from "maptalks";
+import "maptalks/dist/maptalks.css";
 import shenzhen from "@/json/shenzhen.json";
 export default {
   props: {
@@ -21,16 +22,72 @@ export default {
   data() {
     return {
       map: null,
+      markLayer: null, // 项目过程中不会删除的点，初始化时加入
+      pointLayer: null, // 项目过程中会切换的点，可选择加入。。
       areaLayer: null,
+      roadLayer: null,
       drawTool: null,
       drawEndCallback: () => {}
     };
   },
   methods: {
-    // 绘制圆形
+    addMarker() {
+      const marker = new maptalks.Marker([this.initLon, this.initLat], {
+        cursor: "pointer",
+        symbol: {
+          markerFile:
+            window.location.origin + require("@/assets/mark.png").toString(),
+          markerWidth: 28,
+          markerHeight: 40
+        }
+      }).addTo(this.markLayer);
+
+      marker.setInfoWindow({
+        title: "Marker's InfoWindow",
+        content: "Click on marker to open.",
+        autoPan: true,
+        width: 300,
+        minHeight: 120,
+        custom: false,
+        autoOpenOn: "click", //set to null if not to open when clicking on marker
+        autoCloseOn: "click"
+      });
+
+      marker.openInfoWindow();
+    },
+    addPointGroup(pointArray) {
+      this.pointLayer.clear();
+      new maptalks.MultiPoint(pointArray, {
+        cursor: "pointer",
+        symbol: {
+          markerFile:
+            window.location.origin + require("@/assets/point.png").toString(),
+          markerWidth: 28,
+          markerHeight: 40
+        }
+      }).addTo(this.pointLayer);
+    },
+    clearPointGroup() {
+      this.pointLayer.clear();
+    },
+    drawLine(pointArray) {
+      if (this.roadLayer == null) {
+        this.roadLayer = new maptalks.VectorLayer("roadLayer").addTo(this.map);
+      }
+      this.roadLayer.clear();
+      new maptalks.LineString(pointArray, {
+        cursor: "default",
+        symbol: {
+          lineColor: "#409EFF",
+          lineWidth: 3
+        }
+      }).addTo(this.roadLayer);
+    },
+
     drawCircle(center, radius) {
       this.areaLayer.clear();
       const circle = new maptalks.Circle(center, radius, {
+        cursor: "default",
         symbol: {
           lineColor: "#1bbc9b",
           lineWidth: 2,
@@ -45,7 +102,7 @@ export default {
       const polygon = new maptalks.Polygon(shenzhen[districtName], {
         visible: true,
         editable: true,
-        cursor: "pointer",
+        cursor: "default",
         shadowBlur: 0,
         shadowColor: "black",
         draggable: false,
@@ -69,11 +126,11 @@ export default {
     cancelDrawTool() {
       this.drawTool.disable();
     },
-    // 清除绘制的内容
-    clearOverlay() {
+    // 清除区域的内容
+    clearAreaOverlay() {
       this.areaLayer.clear();
     },
-    //初始化drawTool
+
     initDrawTool() {
       this.drawTool = new maptalks.DrawTool({
         mode: "Polygon",
@@ -90,7 +147,7 @@ export default {
         this.areaLayer.clear();
       });
       this.drawTool.on("drawend", param => {
-        const coordinates = param.geometry.getCoordinates(); // x,y 需处理成可用对象
+        const coordinates = param.geometry.getCoordinates();
         // console.log(coordinates);
         this.areaLayer.addGeometry(param.geometry);
         this.drawEndCallback(coordinates);
@@ -107,9 +164,13 @@ export default {
       })
     });
 
-    this.areaLayer = new maptalks.VectorLayer("drawtool").addTo(this.map);
+    this.areaLayer = new maptalks.VectorLayer("areaLayer").addTo(this.map);
+    this.initDrawTool(); //drawTool只创建一次，避免回调函数被多次建立
 
-    this.initDrawTool();
+    this.markLayer = new maptalks.VectorLayer("markLayer").addTo(this.map);
+    this.addMarker();
+
+    this.pointLayer = new maptalks.VectorLayer("pointLayer").addTo(this.map);
   }
 };
 </script>

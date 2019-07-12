@@ -2,7 +2,7 @@
   <div class="main-warpper">
     <crius-map :initLon="lon" :initLat="lat" ref="criusMap"></crius-map>
     <div class="barrrr">
-      <button @click="drawPolygon()">drawPolygon</button>
+      <button @click="polygonDrawTool()">drawPolygon</button>
       <button @click="clear()">clear</button>
       <button @click="cancelDrawTool()">disable</button>
 
@@ -19,6 +19,30 @@
         @click="changeDistrict(district)"
       >
         {{ district }}
+      </button>
+      <br />
+      <button @click="drawLine">线</button>
+      <br />
+      <button
+        @click="
+          addPointGroup([
+            [114.11040469115796, 22.639832751648206],
+            [114.13240469115796, 22.661832751648206]
+          ])
+        "
+      >
+        点1
+      </button>
+
+      <button
+        @click="
+          addPointGroup([
+            [114.10940469115796, 22.638832751648206],
+            [114.13340469115796, 22.665832751648206]
+          ])
+        "
+      >
+        点2
       </button>
     </div>
   </div>
@@ -53,7 +77,7 @@ export default {
       });
     },
     clear() {
-      this.$refs.criusMap.clearOverlay();
+      this.$refs.criusMap.clearAreaOverlay();
     },
     cancelDrawTool() {
       this.$refs.criusMap.cancelDrawTool();
@@ -63,6 +87,15 @@ export default {
     },
     changeDistrict(district) {
       this.$refs.criusMap.drawDistrict(district);
+    },
+    drawLine() {
+      this.$refs.criusMap.drawLine([
+        [114.11040469115796, 22.639832751648206],
+        [114.13240469115796, 22.661832751648206]
+      ]);
+    },
+    addPointGroup(pointArray) {
+      this.$refs.criusMap.addPointGroup(pointArray);
     }
   },
   components: {
